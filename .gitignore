@@ -1,0 +1,8 @@
+node_modules/
+main.js
+*.js.map
+.pnpm-debug.log
+skills-lock.json
+.hotreload
+.agents/
+.claude/
