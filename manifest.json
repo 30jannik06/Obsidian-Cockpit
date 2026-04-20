@@ -6,6 +6,5 @@
   "description": "Replaces the new tab with a project dashboard: status overview, open TODOs, journal heatmap, mini graph, and backlinks.",
   "author": "Jannik Sommer",
   "authorUrl": "https://github.com/30jannik06",
-  "fundingUrl": "",
   "isDesktopOnly": false
 }
