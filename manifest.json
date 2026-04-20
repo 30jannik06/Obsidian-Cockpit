@@ -1,7 +1,7 @@
 {
-  "id": "obsidian-cockpit",
+  "id": "project-cockpit",
   "name": "Project Cockpit",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "minAppVersion": "1.8.7",
   "description": "Replaces the new tab with a project dashboard: status overview, open TODOs, journal heatmap, mini graph, and backlinks.",
   "author": "Jannik Sommer",

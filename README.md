@@ -24,7 +24,7 @@ Search for **Project Cockpit** in *Settings → Community Plugins*.
 ### Manual
 
 1. Download `main.js`, `styles.css`, and `manifest.json` from the [latest release](../../releases/latest).
-2. Copy them into `<vault>/.obsidian/plugins/obsidian-cockpit/`.
+2. Copy them into `<vault>/.obsidian/plugins/project-cockpit/`.
 3. Enable the plugin in *Settings → Community Plugins*.
 
 ## Configuration
