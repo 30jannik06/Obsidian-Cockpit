@@ -2,6 +2,8 @@
 
 An [Obsidian](https://obsidian.md) plugin that replaces the new tab with a project dashboard — all your active work at a glance.
 
+![Project Cockpit Screenshot](docs/screenshot.png)
+
 ## Features
 
 - **Projects** — cards with status badges (Active / Paused / Done), TODO count, and last-modified time. Filter by status.
@@ -32,23 +34,21 @@ Open *Settings → Project Cockpit* to configure:
 | Setting | Default | Description |
 |---|---|---|
 | Projects folder | `01_Projekte` | Root folder scanned for project subfolders |
-| Hub frontmatter key | `type` | Frontmatter key that marks a file as project hub |
-| Hub frontmatter value | `hub` | Value for the hub frontmatter key |
 | Journal folder | `04_Journal` | Folder containing your daily notes |
-| Template — New Session | `05_Templates/Session.md` | Template used by the *New Session* quick action |
+| Template — New Session | `05_Templates/Projekt-Session.md` | Template used by the *New Session* quick action |
 | Template — Journal | `05_Templates/Journal.md` | Template used by the *Journal heute* quick action |
 | Template — New Idea | `05_Templates/Idee.md` | Template used by the *Neue Idee* quick action |
 
 ### Project structure expected
 
-Each project is a **subfolder** inside your projects folder. The subfolder must contain one **hub file** identified by your configured frontmatter key/value:
+Each project is a **subfolder** inside your projects folder. The plugin identifies the hub file by name — a `.md` file with the same name as its folder, placed as a sibling:
 
 ```
 01_Projekte/
-  My-Project/
-    My-Project.md   ← frontmatter: type: hub, status: active
+  My-Project/             ← session and note files go here
     Session-2026-04-17.md
     notes.md
+  My-Project.md           ← hub file (same name as folder, frontmatter: status: active)
 ```
 
 Supported status values: `active` / `aktiv`, `paused` / `pause`, `done` / `abgeschlossen`.
