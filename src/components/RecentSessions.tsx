@@ -19,7 +19,7 @@ export function RecentSessions({ app, plugin }: RecentSessionsProps) {
   const [loading, setLoading] = useState(true);
 
   function collectSessions() {
-    const { projectsFolder, hubFrontmatterKey, hubFrontmatterValue } = plugin.settings;
+    const { projectsFolder } = plugin.settings;
     const folder = app.vault.getAbstractFileByPath(projectsFolder.replace(/\/$/, ""));
     if (!(folder instanceof TFolder)) {
       setLoading(false);
@@ -33,8 +33,6 @@ export function RecentSessions({ app, plugin }: RecentSessionsProps) {
         if (child instanceof TFolder) {
           collectFiles(child, child.name);
         } else if (child instanceof TFile && child.extension === "md") {
-          const fm = app.metadataCache.getFileCache(child)?.frontmatter;
-          if (fm?.[hubFrontmatterKey] === hubFrontmatterValue) continue;
           files.push({ file: child, project: projectName, mtime: child.stat.mtime });
         }
       }
@@ -54,7 +52,7 @@ export function RecentSessions({ app, plugin }: RecentSessionsProps) {
   }, [app, plugin]);
 
   useEffect(() => {
-    let timeout: ReturnType<typeof setTimeout>;
+    let timeout: number;
     const ref = app.vault.on("modify", () => {
       activeWindow.clearTimeout(timeout);
       timeout = activeWindow.setTimeout(() => {

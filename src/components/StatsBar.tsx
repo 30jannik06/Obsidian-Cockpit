@@ -25,8 +25,7 @@ export function StatsBar({ app, plugin }: StatsBarProps) {
   });
 
   const computeStats = useCallback(() => {
-    const { projectsFolder, hubFrontmatterKey, hubFrontmatterValue, journalFolder } =
-      plugin.settings;
+    const { projectsFolder, journalFolder } = plugin.settings;
 
     let totalProjects = 0;
     let activeProjects = 0;
@@ -36,15 +35,18 @@ export function StatsBar({ app, plugin }: StatsBarProps) {
     if (projFolder instanceof TFolder) {
       for (const child of projFolder.children) {
         if (!(child instanceof TFolder)) continue;
+        // Hub file is a sibling with the same name as the folder
+        const hubFile = projFolder.children.find(
+          (f): f is TFile => f instanceof TFile && f.basename === child.name && f.extension === "md"
+        );
+        if (!hubFile) continue;
+        totalProjects++;
+        const fm = app.metadataCache.getFileCache(hubFile)?.frontmatter;
+        const s = (fm?.status as string | undefined)?.toLowerCase() ?? "";
+        if (s === "active" || s === "aktiv") activeProjects++;
         for (const f of child.children) {
           if (!(f instanceof TFile) || f.extension !== "md") continue;
           const cache = app.metadataCache.getFileCache(f);
-          const fm = cache?.frontmatter;
-          if (fm?.[hubFrontmatterKey] === hubFrontmatterValue) {
-            totalProjects++;
-            const s = (fm?.status as string | undefined)?.toLowerCase() ?? "";
-            if (s === "active" || s === "aktiv") activeProjects++;
-          }
           openTodos += cache?.listItems?.filter((i) => i.task === " ").length ?? 0;
         }
       }
@@ -91,7 +93,7 @@ export function StatsBar({ app, plugin }: StatsBarProps) {
   }, [computeStats]);
 
   useEffect(() => {
-    let t: ReturnType<typeof setTimeout>;
+    let t: number;
     const ref = app.metadataCache.on("changed", () => {
       activeWindow.clearTimeout(t);
       t = activeWindow.setTimeout(() => computeStats(), 500);

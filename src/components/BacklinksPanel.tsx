@@ -19,12 +19,17 @@ export function BacklinksPanel({ app, plugin }: BacklinksPanelProps) {
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(() => {
-    const { projectsFolder, hubFrontmatterKey, hubFrontmatterValue } = plugin.settings;
+    const { projectsFolder } = plugin.settings;
     const folder = app.vault.getAbstractFileByPath(projectsFolder.replace(/\/$/, ""));
     if (!(folder instanceof TFolder)) {
       setLoading(false);
       return;
     }
+
+    // Hub files are siblings to project folders with the same name
+    const hubNames = new Set(
+      folder.children.filter((c): c is TFolder => c instanceof TFolder).map((c) => c.name)
+    );
 
     const projectFiles = new Set<string>();
     function collect(f: TFolder) {
@@ -47,11 +52,10 @@ export function BacklinksPanel({ app, plugin }: BacklinksPanelProps) {
     for (const [path, count] of [...incoming.entries()].sort((a, b) => b[1] - a[1]).slice(0, 7)) {
       const file = app.vault.getAbstractFileByPath(path);
       if (!(file instanceof TFile)) continue;
-      const fm = app.metadataCache.getFileCache(file)?.frontmatter;
       result.push({
         file,
         incomingCount: count,
-        isHub: fm?.[hubFrontmatterKey] === hubFrontmatterValue,
+        isHub: hubNames.has(file.basename),
       });
     }
 
@@ -64,7 +68,7 @@ export function BacklinksPanel({ app, plugin }: BacklinksPanelProps) {
   }, [load]);
 
   useEffect(() => {
-    let t: ReturnType<typeof setTimeout>;
+    let t: number;
     const ref = app.metadataCache.on("changed", () => {
       activeWindow.clearTimeout(t);
       t = activeWindow.setTimeout(() => load(), 600);

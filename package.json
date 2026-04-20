@@ -1,6 +1,6 @@
 {
   "name": "obsidian-cockpit",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Replaces the new tab with a customizable project dashboard.",
   "main": "main.js",
   "scripts": {

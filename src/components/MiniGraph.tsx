@@ -68,9 +68,14 @@ export function MiniGraph({ app, plugin }: MiniGraphProps) {
     scaleRef.current = 1;
     panRef.current = { x: 0, y: 0 };
 
-    const { projectsFolder, hubFrontmatterKey, hubFrontmatterValue } = plugin.settings;
+    const { projectsFolder } = plugin.settings;
     const folder = app.vault.getAbstractFileByPath(projectsFolder.replace(/\/$/, ""));
     if (!(folder instanceof TFolder)) return;
+
+    // Hub files are siblings to project folders with the same name
+    const hubNames = new Set(
+      folder.children.filter((c): c is TFolder => c instanceof TFolder).map((c) => c.name)
+    );
 
     const projectFiles = new Set<string>();
     function collectFiles(f: TFolder) {
@@ -89,8 +94,7 @@ export function MiniGraph({ app, plugin }: MiniGraphProps) {
     for (const path of projectFiles) {
       const file = app.vault.getAbstractFileByPath(path);
       if (!(file instanceof TFile)) continue;
-      const fm = app.metadataCache.getFileCache(file)?.frontmatter;
-      const isHub = fm?.[hubFrontmatterKey] === hubFrontmatterValue;
+      const isHub = hubNames.has(file.basename);
       const prev = nodesRef.current.get(path);
       nodes.set(path, {
         id: path,

@@ -4,8 +4,6 @@ import type CockpitPlugin from "./main";
 export interface CockpitSettings {
   projectsFolder: string;
   journalFolder: string;
-  hubFrontmatterKey: string;
-  hubFrontmatterValue: string;
   templateNewSession: string;
   templateJournalToday: string;
   templateNewIdea: string;
@@ -15,8 +13,6 @@ export interface CockpitSettings {
 export const DEFAULT_SETTINGS: CockpitSettings = {
   projectsFolder: "01_Projekte/",
   journalFolder: "04_Journal/",
-  hubFrontmatterKey: "type",
-  hubFrontmatterValue: "hub",
   templateNewSession: "05_Templates/Projekt-Session.md",
   templateJournalToday: "05_Templates/Journal.md",
   templateNewIdea: "05_Templates/Idee.md",
@@ -58,34 +54,6 @@ export class CockpitSettingTab extends PluginSettingTab {
           .setValue(this.plugin.settings.journalFolder)
           .onChange(async (value) => {
             this.plugin.settings.journalFolder = value;
-            await this.plugin.saveSettings();
-          })
-      );
-
-    new Setting(containerEl).setName("Hub identification").setHeading();
-
-    new Setting(containerEl)
-      .setName("Hub frontmatter key")
-      .setDesc("Frontmatter key that identifies a hub file")
-      .addText((text) =>
-        text
-          .setPlaceholder("Type")
-          .setValue(this.plugin.settings.hubFrontmatterKey)
-          .onChange(async (value) => {
-            this.plugin.settings.hubFrontmatterKey = value;
-            await this.plugin.saveSettings();
-          })
-      );
-
-    new Setting(containerEl)
-      .setName("Hub frontmatter value")
-      .setDesc("Frontmatter value that identifies a hub file")
-      .addText((text) =>
-        text
-          .setPlaceholder("Hub")
-          .setValue(this.plugin.settings.hubFrontmatterValue)
-          .onChange(async (value) => {
-            this.plugin.settings.hubFrontmatterValue = value;
             await this.plugin.saveSettings();
           })
       );

@@ -50,7 +50,7 @@ export function JournalHeatmap({ app, plugin }: JournalHeatmapProps) {
   }, [loadJournal]);
 
   useEffect(() => {
-    let timeout: ReturnType<typeof setTimeout>;
+    let timeout: number;
     const ref = app.metadataCache.on("changed", () => {
       activeWindow.clearTimeout(timeout);
       timeout = activeWindow.setTimeout(() => {

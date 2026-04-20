@@ -52,7 +52,7 @@ export function ProjectsGrid({ app, plugin }: ProjectsGridProps) {
   const [filter, setFilter] = useState<StatusFilter>("all");
 
   const loadProjects = useCallback(async () => {
-    const { projectsFolder, hubFrontmatterKey, hubFrontmatterValue } = plugin.settings;
+    const { projectsFolder } = plugin.settings;
     const folder = app.vault.getAbstractFileByPath(projectsFolder.replace(/\/$/, ""));
     if (!(folder instanceof TFolder)) {
       setLoading(false);
@@ -64,11 +64,10 @@ export function ProjectsGrid({ app, plugin }: ProjectsGridProps) {
     for (const child of folder.children) {
       if (!(child instanceof TFolder)) continue;
 
-      const hubFile = child.children.find((f): f is TFile => {
-        if (!(f instanceof TFile) || f.extension !== "md") return false;
-        const cache = app.metadataCache.getFileCache(f);
-        return cache?.frontmatter?.[hubFrontmatterKey] === hubFrontmatterValue;
-      });
+      // Hub file is a sibling to the project folder with the same name
+      const hubFile = folder.children.find(
+        (f): f is TFile => f instanceof TFile && f.basename === child.name && f.extension === "md"
+      );
       if (!hubFile) continue;
 
       const fm = app.metadataCache.getFileCache(hubFile)?.frontmatter;
@@ -77,14 +76,15 @@ export function ProjectsGrid({ app, plugin }: ProjectsGridProps) {
 
       let lastModified = hubFile.stat.mtime;
       let openTodos = 0;
-      let preview = "";
+
+      const hubContent = await app.vault.cachedRead(hubFile);
+      const preview = extractPreview(hubContent);
 
       for (const f of child.children) {
         if (!(f instanceof TFile) || f.extension !== "md") continue;
         if (f.stat.mtime > lastModified) lastModified = f.stat.mtime;
         const content = await app.vault.cachedRead(f);
         openTodos += content.match(/^- \[ \] /gm)?.length ?? 0;
-        if (f.path === hubFile.path && !preview) preview = extractPreview(content);
       }
 
       cards.push({ file: hubFile, title, status, lastModified, openTodos, preview });
@@ -100,7 +100,7 @@ export function ProjectsGrid({ app, plugin }: ProjectsGridProps) {
   }, [loadProjects]);
 
   useEffect(() => {
-    let t: ReturnType<typeof setTimeout>;
+    let t: number;
     const ref = app.metadataCache.on("changed", () => {
       activeWindow.clearTimeout(t);
       t = activeWindow.setTimeout(() => {

@@ -21,7 +21,7 @@ export function TodoList({ app, plugin }: TodoListProps) {
   const [checkingItems, setCheckingItems] = useState<Set<string>>(new Set());
 
   const loadTodos = useCallback(async () => {
-    const { projectsFolder, hubFrontmatterKey, hubFrontmatterValue } = plugin.settings;
+    const { projectsFolder } = plugin.settings;
     const folder = app.vault.getAbstractFileByPath(projectsFolder.replace(/\/$/, ""));
     if (!(folder instanceof TFolder)) {
       setLoading(false);
@@ -35,8 +35,6 @@ export function TodoList({ app, plugin }: TodoListProps) {
         if (child instanceof TFolder) {
           await scanFolder(child, child.name);
         } else if (child instanceof TFile && child.extension === "md") {
-          const fm = app.metadataCache.getFileCache(child)?.frontmatter;
-          if (fm?.[hubFrontmatterKey] === hubFrontmatterValue) continue;
           const content = await app.vault.cachedRead(child);
           content.split("\n").forEach((line, i) => {
             if (/^- \[ \] /.test(line)) {
@@ -65,7 +63,7 @@ export function TodoList({ app, plugin }: TodoListProps) {
   }, [loadTodos]);
 
   useEffect(() => {
-    let t: ReturnType<typeof setTimeout>;
+    let t: number;
     const ref = app.vault.on("modify", () => {
       activeWindow.clearTimeout(t);
       t = activeWindow.setTimeout(() => {
