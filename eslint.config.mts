@@ -6,8 +6,13 @@ import obsidianmd from "eslint-plugin-obsidianmd";
 import prettier from "eslint-config-prettier";
 import { defineConfig } from "eslint/config";
 
+const obsidianGlobals = {
+  activeWindow: "readonly",
+  activeDocument: "readonly",
+} as const;
+
 export default defineConfig([
-  { files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"], plugins: { js }, extends: ["js/recommended"], languageOptions: { globals: globals.browser } },
+  { files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"], plugins: { js }, extends: ["js/recommended"], languageOptions: { globals: { ...globals.browser, ...obsidianGlobals } } },
   tseslint.configs.recommended,
   ...obsidianmd.configs.recommended,
   {

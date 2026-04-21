@@ -15,7 +15,7 @@ export function JournalHeatmap({ app, plugin }: JournalHeatmapProps) {
   const [entryDates, setEntryDates] = useState<Set<string>>(() => new Set());
   const [loading, setLoading] = useState(true);
 
-  const loadJournal = useCallback(async () => {
+  const loadJournal = useCallback(() => {
     const folder = app.vault.getAbstractFileByPath(
       plugin.settings.journalFolder.replace(/\/$/, "")
     );

@@ -22,7 +22,6 @@ export const DEFAULT_SETTINGS: CockpitSettings = {
 export class CockpitSettingTab extends PluginSettingTab {
   plugin: CockpitPlugin;
 
-  // eslint-disable-next-line obsidianmd/prefer-active-doc
   constructor(app: App, plugin: CockpitPlugin) {
     super(app, plugin);
     this.plugin = plugin;
@@ -62,8 +61,7 @@ export class CockpitSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("New session template")
-      // eslint-disable-next-line obsidianmd/ui/sentence-case
-      .setDesc('Template for the "Neue Session" button')
+      .setDesc("Template file for new session notes")
       .addText((text) =>
         text
           .setPlaceholder("05_Templates/Projekt-Session.md")
@@ -76,8 +74,7 @@ export class CockpitSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Journal today template")
-      // eslint-disable-next-line obsidianmd/ui/sentence-case
-      .setDesc('Template for the "Journal heute" button')
+      .setDesc("Template file for daily journal entries")
       .addText((text) =>
         text
           .setPlaceholder("05_Templates/Journal.md")
@@ -90,8 +87,7 @@ export class CockpitSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("New idea template")
-      // eslint-disable-next-line obsidianmd/ui/sentence-case
-      .setDesc('Template for the "Neue Idee" button')
+      .setDesc("Template file for new idea notes")
       .addText((text) =>
         text
           .setPlaceholder("05_Templates/Idee.md")

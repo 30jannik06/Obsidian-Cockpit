@@ -10,7 +10,6 @@ export class CockpitView extends ItemView {
   private root: Root | null = null;
   plugin: CockpitPlugin;
 
-  // eslint-disable-next-line obsidianmd/prefer-active-doc
   constructor(leaf: WorkspaceLeaf, plugin: CockpitPlugin) {
     super(leaf);
     this.plugin = plugin;
@@ -28,17 +27,19 @@ export class CockpitView extends ItemView {
     return "layout-dashboard";
   }
 
-  async onOpen(): Promise<void> {
+  onOpen(): Promise<void> {
     const container = this.containerEl.children[1] as HTMLElement;
     container.empty();
     container.addClass("obsidian-cockpit-container");
 
     this.root = createRoot(container);
     this.root.render(createElement(Cockpit, { app: this.app, plugin: this.plugin }));
+    return Promise.resolve();
   }
 
-  async onClose(): Promise<void> {
+  onClose(): Promise<void> {
     this.root?.unmount();
     this.root = null;
+    return Promise.resolve();
   }
 }
