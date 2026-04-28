@@ -31,3 +31,10 @@
   - **Obsidian API:** Keine externen HTTP-Requests im Main-Thread; `app.metadataCache` für Vault-Daten nutzen statt direktem File-Parsing
   - **React:** Als UI-Layer erlaubt — per `ReactDOM.render()` in `ItemView.containerEl` mounten
   - **Release:** Tag muss exakt der Versionsnummer entsprechen (kein `v`-Prefix) — Obsidian Marketplace-Validator-Anforderung
+
+## Graphify
+Knowledge Graph ist für dieses Projekt konfiguriert.
+- Graph liegt in: graphify-out/graph.json
+- Nach jeder Session Graphify-Output in Vault exportieren:
+  /graphify . dann Output nach C:\Users\j.sommer\Documents\github\ClaudeBrain\01_Projekte\Privat\Obsidian-Cockpit\ kopieren
+- Claude Code liest graph.json automatisch vor dem Zugriff auf Dateien (PreToolUse Hook aktiv)

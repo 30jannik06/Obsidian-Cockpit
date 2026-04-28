@@ -6,3 +6,7 @@ skills-lock.json
 .hotreload
 .agents/
 .claude/
+
+# Graphify
+graphify-out/
+.graphify_*
