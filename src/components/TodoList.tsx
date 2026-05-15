@@ -65,13 +65,13 @@ export function TodoList({ app, plugin }: TodoListProps) {
   useEffect(() => {
     let t: number;
     const ref = app.vault.on("modify", () => {
-      activeWindow.clearTimeout(t);
-      t = activeWindow.setTimeout(() => {
+      window.clearTimeout(t);
+      t = window.setTimeout(() => {
         void loadTodos();
       }, 600);
     });
     return () => {
-      activeWindow.clearTimeout(t);
+      window.clearTimeout(t);
       app.vault.offref(ref);
     };
   }, [app, loadTodos]);
@@ -88,7 +88,7 @@ export function TodoList({ app, plugin }: TodoListProps) {
       return lines.join("\n");
     });
 
-    activeWindow.setTimeout(() => {
+    window.setTimeout(() => {
       setTodos((prev) =>
         prev.filter((t) => !(t.file.path === item.file.path && t.line === item.line))
       );

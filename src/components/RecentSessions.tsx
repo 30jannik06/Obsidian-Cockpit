@@ -54,13 +54,13 @@ export function RecentSessions({ app, plugin }: RecentSessionsProps) {
   useEffect(() => {
     let timeout: number;
     const ref = app.vault.on("modify", () => {
-      activeWindow.clearTimeout(timeout);
-      timeout = activeWindow.setTimeout(() => {
+      window.clearTimeout(timeout);
+      timeout = window.setTimeout(() => {
         collectSessions();
       }, 400);
     });
     return () => {
-      activeWindow.clearTimeout(timeout);
+      window.clearTimeout(timeout);
       app.vault.offref(ref);
     };
   }, [app, plugin]);

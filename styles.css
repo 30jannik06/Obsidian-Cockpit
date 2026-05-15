@@ -229,6 +229,7 @@
 }
 
 .project-card {
+  position: relative;
   background: var(--background-primary);
   border: 1px solid var(--background-modifier-border);
   border-radius: 6px;
@@ -567,10 +568,6 @@
 }
 
 /* Project card preview tooltip */
-.project-card {
-  position: relative;
-}
-
 .project-card__preview-tooltip {
   display: none;
   position: absolute;

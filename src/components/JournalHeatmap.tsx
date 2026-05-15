@@ -52,13 +52,13 @@ export function JournalHeatmap({ app, plugin }: JournalHeatmapProps) {
   useEffect(() => {
     let timeout: number;
     const ref = app.metadataCache.on("changed", () => {
-      activeWindow.clearTimeout(timeout);
-      timeout = activeWindow.setTimeout(() => {
+      window.clearTimeout(timeout);
+      timeout = window.setTimeout(() => {
         void loadJournal();
       }, 500);
     });
     return () => {
-      activeWindow.clearTimeout(timeout);
+      window.clearTimeout(timeout);
       app.metadataCache.offref(ref);
     };
   }, [app, loadJournal]);

@@ -70,11 +70,11 @@ export function BacklinksPanel({ app, plugin }: BacklinksPanelProps) {
   useEffect(() => {
     let t: number;
     const ref = app.metadataCache.on("changed", () => {
-      activeWindow.clearTimeout(t);
-      t = activeWindow.setTimeout(() => load(), 600);
+      window.clearTimeout(t);
+      t = window.setTimeout(() => load(), 600);
     });
     return () => {
-      activeWindow.clearTimeout(t);
+      window.clearTimeout(t);
       app.metadataCache.offref(ref);
     };
   }, [app, load]);

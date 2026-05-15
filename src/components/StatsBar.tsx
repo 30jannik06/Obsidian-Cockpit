@@ -95,11 +95,11 @@ export function StatsBar({ app, plugin }: StatsBarProps) {
   useEffect(() => {
     let t: number;
     const ref = app.metadataCache.on("changed", () => {
-      activeWindow.clearTimeout(t);
-      t = activeWindow.setTimeout(() => computeStats(), 500);
+      window.clearTimeout(t);
+      t = window.setTimeout(() => computeStats(), 500);
     });
     return () => {
-      activeWindow.clearTimeout(t);
+      window.clearTimeout(t);
       app.metadataCache.offref(ref);
     };
   }, [app, computeStats]);

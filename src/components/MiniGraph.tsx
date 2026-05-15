@@ -238,13 +238,13 @@ export function MiniGraph({ app, plugin }: MiniGraphProps) {
       draw();
 
       if (energy >= STOP_THRESHOLD || tickRef.current <= WARMUP_TICKS) {
-        animRef.current = requestAnimationFrame(tick);
+        animRef.current = window.requestAnimationFrame(tick);
       } else {
         animRef.current = null;
       }
     }
 
-    animRef.current = requestAnimationFrame(tick);
+    animRef.current = window.requestAnimationFrame(tick);
 
     // Non-passive wheel for zoom-to-cursor
     const onWheel = (e: WheelEvent) => {

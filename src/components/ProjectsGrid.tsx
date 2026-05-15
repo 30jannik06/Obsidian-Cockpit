@@ -102,13 +102,13 @@ export function ProjectsGrid({ app, plugin }: ProjectsGridProps) {
   useEffect(() => {
     let t: number;
     const ref = app.metadataCache.on("changed", () => {
-      activeWindow.clearTimeout(t);
-      t = activeWindow.setTimeout(() => {
+      window.clearTimeout(t);
+      t = window.setTimeout(() => {
         void loadProjects();
       }, 500);
     });
     return () => {
-      activeWindow.clearTimeout(t);
+      window.clearTimeout(t);
       app.metadataCache.offref(ref);
     };
   }, [app, loadProjects]);
