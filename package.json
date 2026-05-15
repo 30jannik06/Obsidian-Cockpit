@@ -1,6 +1,6 @@
 {
   "name": "obsidian-cockpit",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Replaces the new tab with a customizable project dashboard.",
   "main": "main.js",
   "scripts": {
@@ -49,5 +49,10 @@
   "dependencies": {
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "fast-uri": ">=3.1.2"
+    }
   }
 }
