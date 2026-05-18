@@ -2,22 +2,25 @@
 
 An [Obsidian](https://obsidian.md) plugin that replaces the new tab with a project dashboard — all your active work at a glance.
 
-![Project Cockpit Screenshot](docs/screenshot.png)
+**[Documentation & changelog](https://30jannik06.github.io/Obsidian-Cockpit/)**
 
 ## Features
 
-- **Projects** — cards with status badges (Active / Paused / Done), TODO count, and last-modified time. Filter by status.
-- **Open TODOs** — all unchecked `- [ ]` items across your projects, grouped by project. Click to check off inline or open the file.
-- **Recent Sessions** — the last files you edited, with project and timestamp.
-- **Journal Heatmap** — GitHub-style activity grid of the last 52 weeks. Reads your journal folder by filename (`YYYY-MM-DD.md`) or `datum` frontmatter.
-- **Mini Graph** — force-directed graph of links between your project files. Drag, zoom, and pan. Double-click to reset.
-- **Stats Bar** — active projects, open TODOs, journal entries this week, and current streak.
-- **Backlinks Panel** — the 7 most linked files within your projects folder.
-- **Quick Actions** — one click to create a new session, journal entry, or idea from a template.
+- **Stats bar** — active projects, open TODOs, journal entries this week, current streak
+- **Projects** — cards with status badges (Active / Paused / Done), TODO count, and last-modified time; filter by status
+- **Open TODOs** — all unchecked `- [ ]` items across your projects, grouped by project; click to check off inline or jump to the line
+- **Recently edited** — last files you touched, with project label and relative time; optionally point at a dedicated sessions folder
+- **Pinned notes** — quick access to any vault files you pin; configure paths in settings
+- **Tags overview** — top tags across your vault as clickable chips; click to search
+- **Journal heatmap** — GitHub-style activity grid for the last 52 weeks with streak counter
+- **Graph** — force-directed graph of links between project files; drag, zoom, pan, double-click to reset
+- **Most linked** — the 7 most-referenced files in your projects folder
+- **Quick actions** — fully configurable buttons to create files from templates
+- All sections are individually **togglable** and **reorderable** from settings; collapse state is persisted per section
 
 ## Installation
 
-### From the Community Plugin Store
+### Community Plugin Store
 
 Search for **Project Cockpit** in *Settings → Community Plugins*.
 
@@ -29,26 +32,28 @@ Search for **Project Cockpit** in *Settings → Community Plugins*.
 
 ## Configuration
 
-Open *Settings → Project Cockpit* to configure:
+Open *Settings → Project Cockpit*:
 
 | Setting | Default | Description |
 |---|---|---|
-| Projects folder | `01_Projekte` | Root folder scanned for project subfolders |
-| Journal folder | `04_Journal` | Folder containing your daily notes |
-| Template — New Session | `05_Templates/Projekt-Session.md` | Template used by the *New Session* quick action |
-| Template — Journal | `05_Templates/Journal.md` | Template used by the *Journal heute* quick action |
-| Template — New Idea | `05_Templates/Idee.md` | Template used by the *Neue Idee* quick action |
+| Projects folder | `01_Projekte/` | Root folder scanned for project subfolders and hub files |
+| Sessions folder | *(empty)* | Override folder for "Recently edited" — leave empty to scan projects folder |
+| Journal folder | `04_Journal/` | Folder of daily notes for the heatmap |
+| Quick actions | 3 defaults | Configurable label, template path, and filename prefix per button |
+| Pinned notes | *(empty)* | List of vault-relative paths to always-accessible notes |
+| Sections | all on | Toggle and reorder each section independently |
+| Open on new tab | on | Replace empty new tabs with the cockpit view |
 
-### Project structure expected
+### Project structure
 
-Each project is a **subfolder** inside your projects folder. The plugin identifies the hub file by name — a `.md` file with the same name as its folder, placed as a sibling:
+Each project is a **subfolder** inside your projects folder. The hub file is a sibling `.md` with the same name as the folder:
 
 ```
 01_Projekte/
-  My-Project/             ← session and note files go here
+  My-Project/             ← session and note files
     Session-2026-04-17.md
     notes.md
-  My-Project.md           ← hub file (same name as folder, frontmatter: status: active)
+  My-Project.md           ← hub file (frontmatter: status: active)
 ```
 
 Supported status values: `active` / `aktiv`, `paused` / `pause`, `done` / `abgeschlossen`.
@@ -59,8 +64,8 @@ Supported status values: `active` / `aktiv`, `paused` / `pause`, `done` / `abges
 pnpm install
 pnpm dev        # watch mode
 pnpm build      # production build
-pnpm lint       # ESLint
 pnpm typecheck  # TypeScript
+pnpm lint       # ESLint
 ```
 
 The plugin folder is symlinked into a local Obsidian vault for live testing.

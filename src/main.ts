@@ -44,9 +44,21 @@ export default class CockpitPlugin extends Plugin {
         })
       | null;
 
+    // Migrate sectionOrder: keep valid saved keys, append any new keys at the end
+    const allKeys = DEFAULT_SETTINGS.sectionOrder;
+    const savedOrder = Array.isArray(saved?.sectionOrder)
+      ? saved.sectionOrder.filter((k) => allKeys.includes(k))
+      : [];
+    const missingKeys = allKeys.filter((k) => !savedOrder.includes(k));
+
     this.settings = {
       ...DEFAULT_SETTINGS,
       ...saved,
+      sessionsFolder: saved?.sessionsFolder ?? DEFAULT_SETTINGS.sessionsFolder,
+      pinnedNotes: Array.isArray(saved?.pinnedNotes)
+        ? saved.pinnedNotes
+        : DEFAULT_SETTINGS.pinnedNotes,
+      sectionOrder: [...savedOrder, ...missingKeys],
       sections: { ...DEFAULT_SETTINGS.sections, ...(saved?.sections ?? {}) },
       quickActions:
         saved?.quickActions ??

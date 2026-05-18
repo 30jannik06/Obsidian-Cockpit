@@ -49,15 +49,18 @@ function normalizeStatus(s: string): StatusFilter {
 export function ProjectsGrid({ app, plugin }: ProjectsGridProps) {
   const [projects, setProjects] = useState<ProjectCard[]>([]);
   const [loading, setLoading] = useState(true);
+  const [noFolder, setNoFolder] = useState(false);
   const [filter, setFilter] = useState<StatusFilter>("all");
 
   const loadProjects = useCallback(async () => {
     const { projectsFolder } = plugin.settings;
     const folder = app.vault.getAbstractFileByPath(projectsFolder.replace(/\/$/, ""));
     if (!(folder instanceof TFolder)) {
+      setNoFolder(true);
       setLoading(false);
       return;
     }
+    setNoFolder(false);
 
     const cards: ProjectCard[] = [];
 
@@ -138,6 +141,14 @@ export function ProjectsGrid({ app, plugin }: ProjectsGridProps) {
 
   if (loading) return <Spinner />;
 
+  if (noFolder)
+    return (
+      <p className="cockpit-empty">
+        Folder <code>{plugin.settings.projectsFolder}</code> not found — check{" "}
+        <em>Settings → Project Cockpit</em>.
+      </p>
+    );
+
   return (
     <div className="projects-grid-wrapper">
       <div className="projects-filter-bar">
@@ -158,7 +169,7 @@ export function ProjectsGrid({ app, plugin }: ProjectsGridProps) {
       </div>
 
       {filtered.length === 0 ? (
-        <p className="cockpit-empty">Keine Projekte mit diesem Status.</p>
+        <p className="cockpit-empty">No projects with this status.</p>
       ) : (
         <div className="projects-grid">
           {filtered.map((p) => (

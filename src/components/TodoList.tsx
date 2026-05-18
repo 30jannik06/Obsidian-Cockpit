@@ -20,13 +20,17 @@ export function TodoList({ app, plugin }: TodoListProps) {
   const [loading, setLoading] = useState(true);
   const [checkingItems, setCheckingItems] = useState<Set<string>>(new Set());
 
+  const [noFolder, setNoFolder] = useState(false);
+
   const loadTodos = useCallback(async () => {
     const { projectsFolder } = plugin.settings;
     const folder = app.vault.getAbstractFileByPath(projectsFolder.replace(/\/$/, ""));
     if (!(folder instanceof TFolder)) {
+      setNoFolder(true);
       setLoading(false);
       return;
     }
+    setNoFolder(false);
 
     const items: TodoItem[] = [];
 
@@ -114,7 +118,16 @@ export function TodoList({ app, plugin }: TodoListProps) {
   }
 
   if (loading) return <Spinner />;
-  if (todos.length === 0) return <p className="cockpit-empty">Keine offenen TODOs gefunden.</p>;
+
+  if (noFolder)
+    return (
+      <p className="cockpit-empty">
+        Folder <code>{plugin.settings.projectsFolder}</code> not found — check{" "}
+        <em>Settings → Project Cockpit</em>.
+      </p>
+    );
+
+  if (todos.length === 0) return <p className="cockpit-empty">No open todos found.</p>;
 
   const grouped = todos.reduce<Record<string, TodoItem[]>>((acc, t) => {
     (acc[t.project] = acc[t.project] ?? []).push(t);

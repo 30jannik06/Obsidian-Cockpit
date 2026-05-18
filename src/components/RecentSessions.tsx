@@ -17,14 +17,38 @@ interface RecentSessionsProps {
 export function RecentSessions({ app, plugin }: RecentSessionsProps) {
   const [sessions, setSessions] = useState<SessionFile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [noFolder, setNoFolder] = useState(false);
 
   function collectSessions() {
-    const { projectsFolder } = plugin.settings;
-    const folder = app.vault.getAbstractFileByPath(projectsFolder.replace(/\/$/, ""));
-    if (!(folder instanceof TFolder)) {
+    const { projectsFolder, sessionsFolder } = plugin.settings;
+
+    if (sessionsFolder) {
+      const folder = app.vault.getAbstractFileByPath(sessionsFolder.replace(/\/$/, ""));
+      if (!(folder instanceof TFolder)) {
+        setNoFolder(true);
+        setLoading(false);
+        return;
+      }
+      setNoFolder(false);
+      const files: SessionFile[] = [];
+      for (const child of folder.children) {
+        if (child instanceof TFile && child.extension === "md") {
+          files.push({ file: child, project: "", mtime: child.stat.mtime });
+        }
+      }
+      files.sort((a, b) => b.mtime - a.mtime);
+      setSessions(files.slice(0, 10));
       setLoading(false);
       return;
     }
+
+    const folder = app.vault.getAbstractFileByPath(projectsFolder.replace(/\/$/, ""));
+    if (!(folder instanceof TFolder)) {
+      setNoFolder(true);
+      setLoading(false);
+      return;
+    }
+    setNoFolder(false);
 
     const files: SessionFile[] = [];
 
@@ -66,8 +90,18 @@ export function RecentSessions({ app, plugin }: RecentSessionsProps) {
   }, [app, plugin]);
 
   if (loading) return <Spinner />;
+
+  if (noFolder) {
+    const path = plugin.settings.sessionsFolder || plugin.settings.projectsFolder;
+    return (
+      <p className="cockpit-empty">
+        Folder <code>{path}</code> not found — check <em>Settings → Project Cockpit</em>.
+      </p>
+    );
+  }
+
   if (sessions.length === 0)
-    return <p className="cockpit-empty">Keine Session-Dateien gefunden.</p>;
+    return <p className="cockpit-empty">No recently edited files found.</p>;
 
   return (
     <div className="recent-sessions">
@@ -86,7 +120,7 @@ export function RecentSessions({ app, plugin }: RecentSessionsProps) {
         >
           <div className="session-item__name">{s.file.basename}</div>
           <div className="session-item__meta">
-            <span className="session-item__project">{s.project}</span>
+            {s.project && <span className="session-item__project">{s.project}</span>}
             <span className="session-item__time">{moment(s.mtime).fromNow()}</span>
           </div>
         </div>

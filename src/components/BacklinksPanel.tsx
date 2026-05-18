@@ -18,13 +18,17 @@ export function BacklinksPanel({ app, plugin }: BacklinksPanelProps) {
   const [entries, setEntries] = useState<BacklinkEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [noFolder, setNoFolder] = useState(false);
+
   const load = useCallback(() => {
     const { projectsFolder } = plugin.settings;
     const folder = app.vault.getAbstractFileByPath(projectsFolder.replace(/\/$/, ""));
     if (!(folder instanceof TFolder)) {
+      setNoFolder(true);
       setLoading(false);
       return;
     }
+    setNoFolder(false);
 
     // Hub files are siblings to project folders with the same name
     const hubNames = new Set(
@@ -80,7 +84,16 @@ export function BacklinksPanel({ app, plugin }: BacklinksPanelProps) {
   }, [app, load]);
 
   if (loading) return <Spinner />;
-  if (entries.length === 0) return <p className="cockpit-empty">Keine Verlinkungen gefunden.</p>;
+
+  if (noFolder)
+    return (
+      <p className="cockpit-empty">
+        Folder <code>{plugin.settings.projectsFolder}</code> not found — check{" "}
+        <em>Settings → Project Cockpit</em>.
+      </p>
+    );
+
+  if (entries.length === 0) return <p className="cockpit-empty">No linked files found.</p>;
 
   return (
     <div className="backlinks-list">

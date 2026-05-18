@@ -3,6 +3,22 @@
 All notable changes to Project Cockpit are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.1.8] — 2026-05-18
+
+### Added
+- **Pinned notes** section — pin any vault file by path for one-click access
+- **Tags overview** section — top 30 vault tags as chips; clicking opens a search for that tag
+- **Sessions folder** setting — point "Recently edited" at a dedicated sessions folder instead of scanning all project subfolders
+- **Section ordering** — move any section up or down in the settings UI; order is persisted and applied immediately
+- Both new sections (pinned notes, tags) are off by default and can be enabled per toggle
+- Dependabot config for weekly automated updates (npm + GitHub Actions)
+- CI workflow (`ci.yml`) that runs typecheck and lint on every push and PR
+
+### Fixed
+- Collapsible sections now actually collapse/expand and persist state in `localStorage` (regression introduced in v0.1.7)
+- All empty states show a setup guide when a configured folder does not exist, instead of silently showing nothing
+- German strings replaced with English across all components
+
 ## [0.1.7] — 2026-05-18
 
 ### Added
