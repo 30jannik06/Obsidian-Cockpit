@@ -36,11 +36,38 @@ export default class CockpitPlugin extends Plugin {
   }
 
   async loadSettings(): Promise<void> {
-    this.settings = Object.assign(
-      {},
-      DEFAULT_SETTINGS,
-      (await this.loadData()) as Partial<CockpitSettings>
-    );
+    const saved = (await this.loadData()) as
+      | (Partial<CockpitSettings> & {
+          templateNewSession?: string;
+          templateJournalToday?: string;
+          templateNewIdea?: string;
+        })
+      | null;
+
+    this.settings = {
+      ...DEFAULT_SETTINGS,
+      ...saved,
+      sections: { ...DEFAULT_SETTINGS.sections, ...(saved?.sections ?? {}) },
+      quickActions:
+        saved?.quickActions ??
+        (saved?.templateNewSession
+          ? [
+              { label: "New session", templatePath: saved.templateNewSession, prefix: "Session" },
+              {
+                label: "Journal today",
+                templatePath:
+                  saved.templateJournalToday ?? DEFAULT_SETTINGS.quickActions[1].templatePath,
+                prefix: "Journal",
+              },
+              {
+                label: "New idea",
+                templatePath:
+                  saved.templateNewIdea ?? DEFAULT_SETTINGS.quickActions[2].templatePath,
+                prefix: "Idea",
+              },
+            ]
+          : DEFAULT_SETTINGS.quickActions),
+    };
   }
 
   async saveSettings(): Promise<void> {

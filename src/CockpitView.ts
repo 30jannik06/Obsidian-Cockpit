@@ -37,6 +37,12 @@ export class CockpitView extends ItemView {
     return Promise.resolve();
   }
 
+  refresh(): void {
+    if (this.root) {
+      this.root.render(createElement(Cockpit, { app: this.app, plugin: this.plugin }));
+    }
+  }
+
   onClose(): Promise<void> {
     this.root?.unmount();
     this.root = null;

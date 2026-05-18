@@ -18,6 +18,7 @@ interface CockpitProps {
 
 export function Cockpit({ app, plugin }: CockpitProps) {
   const today = new Date().toISOString().slice(0, 10);
+  const { sections, quickActions } = plugin.settings;
 
   async function createFromTemplate(templatePath: string, prefix: string): Promise<void> {
     const newPath = prefix + "-" + today + ".md";
@@ -41,96 +42,101 @@ export function Cockpit({ app, plugin }: CockpitProps) {
         <span className="cockpit-date">{today}</span>
       </header>
 
-      <ErrorBoundary label="stats">
-        <StatsBar app={app} plugin={plugin} />
-      </ErrorBoundary>
+      {sections.stats && (
+        <ErrorBoundary label="stats">
+          <StatsBar app={app} plugin={plugin} />
+        </ErrorBoundary>
+      )}
 
-      <div className="cockpit-quick-actions">
-        <button
-          className="cockpit-action-btn"
-          onClick={() => {
-            void createFromTemplate(plugin.settings.templateNewSession, "Session");
-          }}
-        >
-          + Neue Session
-        </button>
-        <button
-          className="cockpit-action-btn"
-          onClick={() => {
-            void createFromTemplate(plugin.settings.templateJournalToday, "Journal");
-          }}
-        >
-          + Journal heute
-        </button>
-        <button
-          className="cockpit-action-btn"
-          onClick={() => {
-            void createFromTemplate(plugin.settings.templateNewIdea, "Idee");
-          }}
-        >
-          + Neue Idee
-        </button>
-      </div>
+      {quickActions.length > 0 && (
+        <div className="cockpit-quick-actions">
+          {quickActions.map((action) => (
+            <button
+              key={action.label + action.prefix}
+              className="cockpit-action-btn"
+              onClick={() => {
+                void createFromTemplate(action.templatePath, action.prefix);
+              }}
+            >
+              + {action.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="cockpit-grid">
-        <CollapsibleSection
-          app={app}
-          title="Projekte"
-          storageKey="projects"
-          className="cockpit-section--wide"
-        >
-          <ErrorBoundary label="projects">
-            <ProjectsGrid app={app} plugin={plugin} />
-          </ErrorBoundary>
-        </CollapsibleSection>
+        {sections.projects && (
+          <CollapsibleSection
+            app={app}
+            title="Projects"
+            storageKey="projects"
+            className="cockpit-section--wide"
+          >
+            <ErrorBoundary label="projects">
+              <ProjectsGrid app={app} plugin={plugin} />
+            </ErrorBoundary>
+          </CollapsibleSection>
+        )}
 
-        <CollapsibleSection app={app} title="Offene TODOs" storageKey="todos">
-          <ErrorBoundary label="todos">
-            <TodoList app={app} plugin={plugin} />
-          </ErrorBoundary>
-        </CollapsibleSection>
+        {sections.todos && (
+          <CollapsibleSection app={app} title="Open todos" storageKey="todos">
+            <ErrorBoundary label="todos">
+              <TodoList app={app} plugin={plugin} />
+            </ErrorBoundary>
+          </CollapsibleSection>
+        )}
 
-        <CollapsibleSection app={app} title="Zuletzt bearbeitet" storageKey="recent">
-          <ErrorBoundary label="recent sessions">
-            <RecentSessions app={app} plugin={plugin} />
-          </ErrorBoundary>
-        </CollapsibleSection>
+        {sections.recentSessions && (
+          <CollapsibleSection app={app} title="Recently edited" storageKey="recent">
+            <ErrorBoundary label="recent sessions">
+              <RecentSessions app={app} plugin={plugin} />
+            </ErrorBoundary>
+          </CollapsibleSection>
+        )}
       </div>
 
-      <CollapsibleSection
-        app={app}
-        title="Journal Aktivität"
-        storageKey="heatmap"
-        className="cockpit-section--full"
-      >
-        <ErrorBoundary label="journal heatmap">
-          <JournalHeatmap app={app} plugin={plugin} />
-        </ErrorBoundary>
-      </CollapsibleSection>
-
-      <div className="cockpit-bottom-row">
+      {sections.heatmap && (
         <CollapsibleSection
           app={app}
-          title="Graph"
-          storageKey="graph"
-          className="cockpit-section--grow"
+          title="Journal activity"
+          storageKey="heatmap"
+          className="cockpit-section--full"
         >
-          <ErrorBoundary label="graph">
-            <MiniGraph app={app} plugin={plugin} />
+          <ErrorBoundary label="journal heatmap">
+            <JournalHeatmap app={app} plugin={plugin} />
           </ErrorBoundary>
         </CollapsibleSection>
+      )}
 
-        <CollapsibleSection
-          app={app}
-          title="Meistverlinkt"
-          storageKey="backlinks"
-          className="cockpit-section--grow"
-        >
-          <ErrorBoundary label="backlinks">
-            <BacklinksPanel app={app} plugin={plugin} />
-          </ErrorBoundary>
-        </CollapsibleSection>
-      </div>
+      {(sections.graph || sections.backlinks) && (
+        <div className="cockpit-bottom-row">
+          {sections.graph && (
+            <CollapsibleSection
+              app={app}
+              title="Graph"
+              storageKey="graph"
+              className="cockpit-section--grow"
+            >
+              <ErrorBoundary label="graph">
+                <MiniGraph app={app} plugin={plugin} />
+              </ErrorBoundary>
+            </CollapsibleSection>
+          )}
+
+          {sections.backlinks && (
+            <CollapsibleSection
+              app={app}
+              title="Most linked"
+              storageKey="backlinks"
+              className="cockpit-section--grow"
+            >
+              <ErrorBoundary label="backlinks">
+                <BacklinksPanel app={app} plugin={plugin} />
+              </ErrorBoundary>
+            </CollapsibleSection>
+          )}
+        </div>
+      )}
     </div>
   );
 }
