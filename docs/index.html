@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project Cockpit — Obsidian Plugin</title>
+  <meta name="description" content="Replace the new tab with a project dashboard for Obsidian. Status overview, open TODOs, journal heatmap, mini graph, and more." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d1117;
+      --bg-card: #161b22;
+      --bg-code: #1a2030;
+      --border: #30363d;
+      --accent: #7c3aed;
+      --accent-light: #a78bfa;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --green: #3fb950;
+      --yellow: #d29922;
+      --radius: 10px;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    a { color: var(--accent-light); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Nav ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 32px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(13, 17, 23, 0.85);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .nav-logo svg { color: var(--accent-light); }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      transition: color 0.15s;
+    }
+
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: none;
+      text-decoration: none;
+    }
+
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #6d28d9; text-decoration: none; }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { background: var(--bg-card); text-decoration: none; }
+
+    /* ── Hero ── */
+    .hero {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 100px 32px 80px;
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+    }
+
+    .hero-badge span { color: var(--green); }
+
+    h1 {
+      font-size: clamp(2.4rem, 5vw, 3.6rem);
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      margin-bottom: 20px;
+    }
+
+    h1 em {
+      font-style: normal;
+      background: linear-gradient(135deg, #a78bfa, #7c3aed);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      max-width: 560px;
+      margin: 0 auto 40px;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* ── Demo window ── */
+    .demo {
+      max-width: 860px;
+      margin: 0 auto 80px;
+      padding: 0 32px;
+    }
+
+    .demo-window {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    .demo-titlebar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      background: #0d1117;
+    }
+
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-red { background: #ff5f57; }
+    .dot-yellow { background: #febc2e; }
+    .dot-green { background: #28c840; }
+
+    .demo-titlebar-label {
+      margin-left: 8px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .cockpit-mock {
+      padding: 24px 28px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .mock-header {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .mock-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .mock-date {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .mock-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .mock-stat {
+      background: #0d1117;
+      border-radius: 7px;
+      padding: 10px 14px;
+    }
+
+    .mock-stat-val {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .mock-stat-val.accent { color: var(--accent-light); }
+
+    .mock-stat-label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    .mock-actions {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
+    }
+
+    .mock-btn {
+      background: var(--accent);
+      color: #fff;
+      border-radius: 5px;
+      padding: 5px 12px;
+      font-size: 0.78rem;
+      font-weight: 500;
+    }
+
+    .mock-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 16px;
+    }
+
+    .mock-section-title {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .mock-projects {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .mock-card {
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+    }
+
+    .mock-card-name {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .mock-card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.72rem;
+    }
+
+    .mock-badge {
+      padding: 1px 7px;
+      border-radius: 20px;
+      font-size: 0.68rem;
+      font-weight: 600;
+    }
+
+    .mock-badge.active { background: rgba(63,185,80,.18); color: #3fb950; }
+    .mock-badge.paused { background: rgba(210,153,34,.18); color: var(--yellow); }
+    .mock-badge.done   { background: rgba(150,150,150,.15); color: var(--text-muted); }
+
+    .mock-todo-list {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .mock-todo {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .mock-todo-box {
+      width: 13px;
+      height: 13px;
+      border: 1.5px solid var(--border);
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .mock-recent-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .mock-recent-item {
+      font-size: 0.78rem;
+    }
+
+    .mock-recent-name {
+      color: var(--text);
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 120px;
+    }
+
+    .mock-recent-time {
+      color: var(--text-muted);
+      font-size: 0.7rem;
+    }
+
+    /* ── Sections ── */
+    section { max-width: 900px; margin: 0 auto; padding: 0 32px 80px; }
+
+    .section-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-light);
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 40px;
+    }
+
+    /* ── Features ── */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: border-color 0.2s;
+    }
+
+    .feature-card:hover { border-color: var(--accent); }
+
+    .feature-icon {
+      width: 38px;
+      height: 38px;
+      background: rgba(124, 58, 237, 0.12);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+      color: var(--accent-light);
+    }
+
+    .feature-card h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 6px; }
+    .feature-card p { font-size: 0.87rem; color: var(--text-muted); line-height: 1.5; }
+
+    /* ── Install ── */
+    .install-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 600px) { .install-grid { grid-template-columns: 1fr; } }
+
+    .install-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+
+    .install-card h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tag {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: rgba(63, 185, 80, 0.12);
+      color: var(--green);
+      border: 1px solid rgba(63, 185, 80, 0.3);
+    }
+
+    .install-card ol, .install-card ul {
+      padding-left: 18px;
+      font-size: 0.87rem;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .install-card code, code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      background: var(--bg-code);
+      padding: 1px 6px;
+      border-radius: 4px;
+      color: var(--text);
+    }
+
+    /* ── Dev ── */
+    .code-block {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      line-height: 1.8;
+      overflow-x: auto;
+    }
+
+    .code-block .comment { color: #6a9955; }
+    .code-block .cmd { color: var(--accent-light); }
+    .code-block .arg { color: #ce9178; }
+
+    /* ── Changelog ── */
+    .changelog { max-width: 720px; }
+
+    .changelog-release {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .changelog-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .changelog-version {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--accent-light);
+    }
+
+    .changelog-date { font-size: 0.8rem; color: var(--text-muted); }
+
+    .changelog-tag {
+      margin-left: auto;
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: rgba(63, 185, 80, 0.12);
+      color: var(--green);
+      border: 1px solid rgba(63, 185, 80, 0.3);
+    }
+
+    .changelog-body { padding: 16px 20px; }
+
+    .changelog-group { margin-bottom: 12px; }
+    .changelog-group:last-child { margin-bottom: 0; }
+
+    .changelog-group-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .changelog-items {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .changelog-items li {
+      font-size: 0.87rem;
+      color: var(--text-muted);
+      display: flex;
+      gap: 8px;
+    }
+
+    .changelog-items li::before {
+      content: "·";
+      color: var(--accent-light);
+      flex-shrink: 0;
+    }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    footer a { color: var(--text-muted); }
+    footer a:hover { color: var(--text); }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      nav { padding: 12px 16px; }
+      .hero { padding: 60px 16px 60px; }
+      .demo, section { padding-left: 16px; padding-right: 16px; }
+      .nav-links { display: none; }
+      .mock-grid { grid-template-columns: 1fr; }
+      .mock-stats { grid-template-columns: repeat(2, 1fr); }
+      .mock-projects { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="#">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+    Project Cockpit
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#install">Installation</a></li>
+    <li><a href="#dev">Development</a></li>
+    <li><a href="#changelog">Changelog</a></li>
+    <li><a href="https://github.com/30jannik06/Obsidian-Cockpit">GitHub</a></li>
+  </ul>
+  <a class="btn btn-primary" href="https://github.com/30jannik06/Obsidian-Cockpit/releases/latest">
+    Download
+  </a>
+</nav>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-badge">
+    <span>●</span> Obsidian Plugin &nbsp;·&nbsp; v0.1.7 &nbsp;·&nbsp; Free &amp; Open Source
+  </div>
+  <h1>Your <em>project dashboard</em><br />in every new tab</h1>
+  <p class="hero-sub">
+    Replace the empty new tab with a full project overview — status, TODOs,
+    journal heatmap, graph, and quick actions, all in one place.
+  </p>
+  <div class="hero-actions">
+    <a class="btn btn-primary" href="https://github.com/30jannik06/Obsidian-Cockpit/releases/latest">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Download latest
+    </a>
+    <a class="btn btn-secondary" href="https://github.com/30jannik06/Obsidian-Cockpit">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/></svg>
+      View on GitHub
+    </a>
+  </div>
+</div>
+
+<!-- Dashboard mockup -->
+<div class="demo">
+  <div class="demo-window">
+    <div class="demo-titlebar">
+      <div class="dot dot-red"></div>
+      <div class="dot dot-yellow"></div>
+      <div class="dot dot-green"></div>
+      <span class="demo-titlebar-label">Cockpit — Obsidian</span>
+    </div>
+    <div class="cockpit-mock">
+      <div class="mock-header">
+        <span class="mock-title">Cockpit</span>
+        <span class="mock-date">2026-05-18</span>
+      </div>
+
+      <div class="mock-stats">
+        <div class="mock-stat">
+          <div class="mock-stat-val">3</div>
+          <div class="mock-stat-label">active projects</div>
+        </div>
+        <div class="mock-stat">
+          <div class="mock-stat-val">12</div>
+          <div class="mock-stat-label">open TODOs</div>
+        </div>
+        <div class="mock-stat">
+          <div class="mock-stat-val">5</div>
+          <div class="mock-stat-label">journal this week</div>
+        </div>
+        <div class="mock-stat">
+          <div class="mock-stat-val accent">14</div>
+          <div class="mock-stat-label">days streak</div>
+        </div>
+      </div>
+
+      <div class="mock-actions">
+        <div class="mock-btn">+ New session</div>
+        <div class="mock-btn">+ Journal today</div>
+        <div class="mock-btn">+ New idea</div>
+      </div>
+
+      <div class="mock-grid">
+        <div>
+          <div class="mock-section-title">▾ Projects</div>
+          <div class="mock-projects">
+            <div class="mock-card">
+              <div class="mock-card-name">Obsidian-Cockpit</div>
+              <div class="mock-card-meta">
+                <span class="mock-badge active">Active</span>
+                <span style="color:var(--accent-light);font-size:0.72rem">3 ☐</span>
+              </div>
+            </div>
+            <div class="mock-card">
+              <div class="mock-card-name">KS-Coating</div>
+              <div class="mock-card-meta">
+                <span class="mock-badge active">Active</span>
+                <span style="color:var(--accent-light);font-size:0.72rem">7 ☐</span>
+              </div>
+            </div>
+            <div class="mock-card">
+              <div class="mock-card-name">Motogarage</div>
+              <div class="mock-card-meta">
+                <span class="mock-badge paused">Paused</span>
+                <span style="color:var(--text-muted);font-size:0.72rem">2 ☐</span>
+              </div>
+            </div>
+            <div class="mock-card">
+              <div class="mock-card-name">ClaudeBrain</div>
+              <div class="mock-card-meta">
+                <span class="mock-badge done">Done</span>
+                <span style="color:var(--text-muted);font-size:0.72rem">0 ☐</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="mock-section-title">▾ Open todos</div>
+          <div class="mock-todo-list">
+            <div class="mock-todo">
+              <div class="mock-todo-box"></div>
+              <span>Fix activeWindow refs</span>
+            </div>
+            <div class="mock-todo">
+              <div class="mock-todo-box"></div>
+              <span>Write release notes</span>
+            </div>
+            <div class="mock-todo">
+              <div class="mock-todo-box"></div>
+              <span>Update README</span>
+            </div>
+            <div class="mock-todo">
+              <div class="mock-todo-box"></div>
+              <span>Add screenshot</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="mock-section-title">▾ Recently edited</div>
+          <div class="mock-recent-list">
+            <div class="mock-recent-item">
+              <div class="mock-recent-name">Session-2026-05-18</div>
+              <div class="mock-recent-time">2 min ago</div>
+            </div>
+            <div class="mock-recent-item">
+              <div class="mock-recent-name">Journal-2026-05-18</div>
+              <div class="mock-recent-time">1 hour ago</div>
+            </div>
+            <div class="mock-recent-item">
+              <div class="mock-recent-name">Idee-2026-05-17</div>
+              <div class="mock-recent-time">yesterday</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Features -->
+<section id="features">
+  <p class="section-label">Features</p>
+  <h2>Everything at a glance,<br />every time you open a tab</h2>
+  <div class="features">
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+      </div>
+      <h3>Projects overview</h3>
+      <p>Cards with status badges (Active / Paused / Done), open TODO count, and last-modified time. Filter by status with one click.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      </div>
+      <h3>Open TODOs</h3>
+      <p>All unchecked <code>- [ ]</code> items across your projects, grouped by project. Check them off inline or jump straight to the file.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </div>
+      <h3>Journal heatmap</h3>
+      <p>GitHub-style activity grid of the last 52 weeks. Know at a glance how consistent your journaling has been.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      <h3>Stats bar</h3>
+      <p>Active projects, open TODOs, journal entries this week, and your current streak — always visible at the top.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      </div>
+      <h3>Mini graph</h3>
+      <p>Force-directed graph of links between your project files. Drag, zoom, pan, and double-click to reset.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      </div>
+      <h3>Backlinks panel</h3>
+      <p>The 7 most linked files in your projects folder — instantly see which notes are your most referenced hubs.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      </div>
+      <h3>Quick actions</h3>
+      <p>Configurable one-click buttons to create new files from templates. Label, template path, and filename prefix are all customizable.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+      </div>
+      <h3>Fully configurable</h3>
+      <p>Choose which sections are visible, configure folder paths, and toggle whether the cockpit opens on every new tab.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Installation -->
+<section id="install">
+  <p class="section-label">Installation</p>
+  <h2>Get started in seconds</h2>
+  <div class="install-grid">
+    <div class="install-card">
+      <h3>Community store <span class="tag">Recommended</span></h3>
+      <ol>
+        <li>Open <strong>Settings → Community Plugins</strong></li>
+        <li>Disable Restricted Mode if prompted</li>
+        <li>Click <strong>Browse</strong> and search for <strong>Project Cockpit</strong></li>
+        <li>Click <strong>Install</strong>, then <strong>Enable</strong></li>
+      </ol>
+    </div>
+    <div class="install-card">
+      <h3>Manual</h3>
+      <ol>
+        <li>Download <code>main.js</code>, <code>manifest.json</code>, <code>styles.css</code> from the <a href="https://github.com/30jannik06/Obsidian-Cockpit/releases/latest">latest release</a></li>
+        <li>Create <code>.obsidian/plugins/project-cockpit/</code> in your vault</li>
+        <li>Copy the three files into that folder</li>
+        <li>Enable <strong>Project Cockpit</strong> in Settings → Community Plugins</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- Development -->
+<section id="dev">
+  <p class="section-label">Development</p>
+  <h2>Built with TypeScript &amp; React</h2>
+  <div class="code-block">
+    <div><span class="comment"># Clone and install</span></div>
+    <div><span class="cmd">git clone</span> <span class="arg">https://github.com/30jannik06/Obsidian-Cockpit</span></div>
+    <div><span class="cmd">cd</span> Obsidian-Cockpit &amp;&amp; <span class="cmd">pnpm install</span></div>
+    <br/>
+    <div><span class="comment"># Development</span></div>
+    <div><span class="cmd">pnpm dev</span>        <span class="comment"># watch mode</span></div>
+    <div><span class="cmd">pnpm build</span>      <span class="comment"># production build</span></div>
+    <div><span class="cmd">pnpm typecheck</span>  <span class="comment"># TypeScript check</span></div>
+    <div><span class="cmd">pnpm lint</span>       <span class="comment"># ESLint check</span></div>
+    <div><span class="cmd">pnpm lint:fix</span>   <span class="comment"># ESLint + auto-fix</span></div>
+  </div>
+</section>
+
+<!-- Changelog -->
+<section id="changelog" class="changelog">
+  <p class="section-label">Changelog</p>
+  <h2>What's new</h2>
+
+  <div class="changelog-release">
+    <div class="changelog-header">
+      <span class="changelog-version">0.1.7</span>
+      <span class="changelog-date">2026-05-18</span>
+      <span class="changelog-tag">Latest</span>
+    </div>
+    <div class="changelog-body">
+      <div class="changelog-group">
+        <div class="changelog-group-label">Added</div>
+        <ul class="changelog-items">
+          <li>Quick actions are now fully configurable — set label, template path, and filename prefix per button</li>
+          <li>Add and remove quick action buttons from settings</li>
+          <li>Seven dashboard sections can each be toggled on or off independently</li>
+          <li>Settings changes instantly re-render the open cockpit view</li>
+          <li>Automatic migration of legacy <code>templateNewSession</code> / <code>templateJournalToday</code> / <code>templateNewIdea</code> fields</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="changelog-release">
+    <div class="changelog-header">
+      <span class="changelog-version">0.1.6</span>
+      <span class="changelog-date">2026-05-18</span>
+    </div>
+    <div class="changelog-body">
+      <div class="changelog-group">
+        <div class="changelog-group-label">Fixed</div>
+        <ul class="changelog-items">
+          <li>Release CI now uses <code>--frozen-lockfile</code> for reproducible builds</li>
+          <li>Node.js version pinned via <code>.node-version</code> file to prevent minor-version drift</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="changelog-release">
+    <div class="changelog-header">
+      <span class="changelog-version">0.1.5</span>
+      <span class="changelog-date">2026-05-15</span>
+    </div>
+    <div class="changelog-body">
+      <div class="changelog-group">
+        <div class="changelog-group-label">Fixed</div>
+        <ul class="changelog-items">
+          <li>Forced <code>fast-uri ≥ 3.1.2</code> via <code>pnpm.overrides</code> to resolve transitive vulnerability in <code>eslint-plugin-obsidianmd</code></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="changelog-release">
+    <div class="changelog-header">
+      <span class="changelog-version">0.1.4</span>
+      <span class="changelog-date">2026-05-15</span>
+    </div>
+    <div class="changelog-body">
+      <div class="changelog-group">
+        <div class="changelog-group-label">Fixed</div>
+        <ul class="changelog-items">
+          <li>Replaced <code>activeWindow</code> timer calls with <code>window</code> to satisfy Obsidian's API linter</li>
+          <li>Removed duplicate CSS selector that caused a build warning</li>
+          <li>Synced lockfile with Obsidian 1.12.3 peer dependency pin</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="changelog-release">
+    <div class="changelog-header">
+      <span class="changelog-version">0.1.3</span>
+      <span class="changelog-date">2026-05-15</span>
+    </div>
+    <div class="changelog-body">
+      <div class="changelog-group">
+        <div class="changelog-group-label">Changed</div>
+        <ul class="changelog-items">
+          <li>Replaced <code>lint-staged</code> with <code>nano-staged</code> for faster pre-commit hooks</li>
+          <li>Added GitHub artifact attestations for <code>main.js</code> and <code>styles.css</code> in the release workflow</li>
+          <li>Resolved all remaining Obsidian Community Plugin marketplace ESLint violations</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="changelog-release">
+    <div class="changelog-header">
+      <span class="changelog-version">0.1.2</span>
+      <span class="changelog-date">2026-04-20</span>
+    </div>
+    <div class="changelog-body">
+      <div class="changelog-group">
+        <div class="changelog-group-label">Fixed</div>
+        <ul class="changelog-items">
+          <li>Renamed plugin ID from <code>obsidian-cockpit</code> to <code>project-cockpit</code> to meet Obsidian marketplace naming requirements</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="changelog-release">
+    <div class="changelog-header">
+      <span class="changelog-version">0.1.1</span>
+      <span class="changelog-date">2026-04-20</span>
+    </div>
+    <div class="changelog-body">
+      <div class="changelog-group">
+        <div class="changelog-group-label">Fixed</div>
+        <ul class="changelog-items">
+          <li>Hub file detection now correctly handles sibling-file vault structures where the hub <code>.md</code> sits next to the project subfolder rather than inside it</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="changelog-release">
+    <div class="changelog-header">
+      <span class="changelog-version">0.1.0</span>
+      <span class="changelog-date">2026-04-17</span>
+    </div>
+    <div class="changelog-body">
+      <div class="changelog-group">
+        <div class="changelog-group-label">Added</div>
+        <ul class="changelog-items">
+          <li>ProjectsGrid — project cards with status filter (Active / Paused / Done) and TODO count badges</li>
+          <li>TodoList — open TODOs grouped by project with inline checkoff via <code>vault.process()</code></li>
+          <li>RecentSessions — recently modified files with project name and timestamp</li>
+          <li>JournalHeatmap — GitHub-style activity grid for the last 52 weeks with streak counter</li>
+          <li>MiniGraph — force-directed graph of project links with zoom, pan, and drag</li>
+          <li>StatsBar — at-a-glance numbers: active projects, open TODOs, journal entries this week, streak</li>
+          <li>BacklinksPanel — top 7 most linked files within the projects folder</li>
+          <li>Quick actions — one-click buttons to create new session, journal, or idea from templates</li>
+          <li>Collapsible sections with per-section collapse state persisted in <code>localStorage</code></li>
+          <li>Settings tab for folder paths and template configuration</li>
+          <li>Auto-replaces empty new tabs with the cockpit view (configurable)</li>
+          <li>Full React 18 UI with error boundaries per section</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>
+    Project Cockpit is open source under the <a href="https://github.com/30jannik06/Obsidian-Cockpit/blob/main/LICENSE">MIT License</a> ·
+    Built by <a href="https://github.com/30jannik06">30jannik06</a> ·
+    <a href="https://github.com/30jannik06/Obsidian-Cockpit">GitHub</a>
+  </p>
+</footer>
+
+</body>
+</html>
