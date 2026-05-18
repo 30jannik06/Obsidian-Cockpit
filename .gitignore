@@ -10,3 +10,4 @@ skills-lock.json
 # Graphify
 graphify-out/
 .graphify_*
+data.json
